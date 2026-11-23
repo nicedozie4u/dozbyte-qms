@@ -15,7 +15,7 @@ Planning documents: requirements, design and the development plan live in the pr
 | `packages/shared`     | Zod schemas and types shared by server and screens; socket event names            |
 | `packages/templates`  | Business type templates; `hospital.json` first                                    |
 | `packages/config`     | Shared TypeScript settings                                                        |
-| `apps/server`         | Site server. Sprint 0: Prisma schema and first migration                          |
+| `apps/server`         | Site server: NestJS API, logins, queue engine, Socket.IO live updates             |
 | `apps/kiosk-android`  | Kiosk app (Capacitor). Sprint 0: hardware spike checklist                         |
 | `deploy/compose`      | Docker Compose for local Postgres and Redis                                       |
 | `docs/adr`            | Decision records                                                                  |
@@ -33,8 +33,14 @@ pnpm install
 pnpm db:up                                   # Postgres 16 and Redis 7
 cp apps/server/.env.example apps/server/.env
 pnpm --filter @dozbyte/server db:migrate     # apply migrations
+pnpm build                                   # build shared packages and the server
+pnpm --filter @dozbyte/server seed           # demo hospital; prints dev logins once
+pnpm --filter @dozbyte/server start          # API on http://localhost:3001
 pnpm check                                   # format, lint, type check, tests
 ```
+
+Server tests need a `dozbyte_test` database (`createdb -h localhost -U dozbyte dozbyte_test`);
+set `TEST_DATABASE_URL` to use another one.
 
 ## Working on the code
 

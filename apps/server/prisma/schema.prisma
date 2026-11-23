@@ -9,8 +9,11 @@
 // - Tables and columns are snake_case in the database, camelCase in TypeScript.
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  runtime             = "nodejs"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
 }
 
 datasource db {

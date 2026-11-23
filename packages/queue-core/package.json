@@ -5,9 +5,13 @@
   "type": "module",
   "description": "Pure queue rules: who is next, journey moves, wait estimates. No database, no I/O.",
   "exports": {
-    ".": "./src/index.ts"
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    }
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

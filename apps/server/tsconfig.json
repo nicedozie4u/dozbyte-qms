@@ -1,4 +1,9 @@
 {
   "extends": "../../packages/config/tsconfig.base.json",
-  "include": ["prisma.config.ts"]
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["src", "test", "prisma.config.ts", "vitest.config.ts"]
 }
