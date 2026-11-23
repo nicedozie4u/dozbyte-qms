@@ -18,8 +18,9 @@ jobs:
         image: postgres:16-alpine
         env:
           POSTGRES_USER: dozbyte
-          POSTGRES_PASSWORD: dozbyte
           POSTGRES_DB: dozbyte
+          # Throwaway CI database: no password needed.
+          POSTGRES_HOST_AUTH_METHOD: trust
         ports:
           - 5432:5432
         options: >-
@@ -27,7 +28,7 @@ jobs:
           --health-interval 5s
           --health-retries 10
     env:
-      DATABASE_URL: postgresql://dozbyte:dozbyte@localhost:5432/dozbyte?schema=public
+      DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
