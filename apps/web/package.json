@@ -1,0 +1,24 @@
+{
+  "name": "@dozbyte/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Staff screens: front desk and staff console. Admin portal, TV, counter signs and phone page come later.",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@dozbyte/shared": "workspace:*",
+    "next": "^15.5.29",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "socket.io-client": "^4.8.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0"
+  }
+}

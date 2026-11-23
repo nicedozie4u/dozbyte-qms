@@ -16,12 +16,13 @@ Planning documents: requirements, design and the development plan live in the pr
 | `packages/templates`  | Business type templates; `hospital.json` first                                    |
 | `packages/config`     | Shared TypeScript settings                                                        |
 | `apps/server`         | Site server: NestJS API, logins, queue engine, Socket.IO live updates             |
+| `apps/web`            | Staff screens: login, front desk, staff console (Next.js)                         |
 | `apps/kiosk-android`  | Kiosk app (Capacitor). Sprint 0: hardware spike checklist                         |
 | `deploy/compose`      | Docker Compose for local Postgres and Redis                                       |
 | `docs/adr`            | Decision records                                                                  |
 
-Coming next: `apps/web` (staff console, admin portal, TV, counter sign, phone page) and
-`apps/kiosk-web` in sprints 1 to 4. See the development plan for the full roadmap.
+Coming next: the waiting-room TV, counter signs and `apps/kiosk-web` in sprints 3 and 4, then
+the admin portal. See the development plan for the full roadmap.
 
 ## Getting started
 
@@ -36,6 +37,7 @@ pnpm --filter @dozbyte/server db:migrate     # apply migrations
 pnpm build                                   # build shared packages and the server
 pnpm --filter @dozbyte/server seed           # demo hospital; prints dev logins once
 pnpm --filter @dozbyte/server start          # API on http://localhost:3001
+pnpm --filter @dozbyte/web dev                # screens on http://localhost:3000
 pnpm check                                   # format, lint, type check, tests
 ```
 

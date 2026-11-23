@@ -48,6 +48,8 @@ jobs:
         run: pnpm typecheck
       - name: Tests (unit and integration)
         run: pnpm test
+      - name: Build
+        run: pnpm build
       - name: Database schema and migrations
         working-directory: apps/server
         run: |
