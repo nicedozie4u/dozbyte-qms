@@ -1,6 +1,7 @@
 import { SocketEvents } from '@dozbyte/shared';
 import { io, type Socket } from 'socket.io-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { RealtimeGateway } from '../src/realtime/realtime.gateway.js';
 import { idOf, startTestApp, type TestContext } from './helpers.js';
 
 let ctx: TestContext;
@@ -61,5 +62,16 @@ describe('live updates (NFR-1)', () => {
     const payload = await called;
     expect(payload.counterName).toBe('Records Desk 1');
     expect(Date.now() - started).toBeLessThan(2_000);
+  });
+});
+
+describe('socket sessions', () => {
+  it('disconnects a socket once its account is switched off', async () => {
+    const s = connect(await ctx.cookieFor('nurse@test.local'));
+    await once(s, 'connect');
+    await ctx.prisma.user.update({ where: { email: 'nurse@test.local' }, data: { active: false } });
+    const ended = once<{ message: string }>(s, 'auth.error');
+    await ctx.app.get(RealtimeGateway).recheckSessions();
+    expect((await ended).message).toMatch(/log in/);
   });
 });

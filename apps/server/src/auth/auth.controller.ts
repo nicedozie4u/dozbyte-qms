@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpCode, Inject, Post, Res } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Inject, Post, Req, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { APP_CONFIG, type AppConfig } from '../config.js';
 import { ZodBody } from '../common/zod-body.js';
@@ -26,9 +26,10 @@ export class AuthController {
   @HttpCode(200)
   async login(
     @Body(new ZodBody(LoginBody)) body: z.infer<typeof LoginBody>,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: SessionUser }> {
-    const { token, user } = await this.auth.login(body.email, body.password);
+    const { token, user } = await this.auth.login(body.email, body.password, req.ip ?? 'unknown');
     res.cookie(SESSION_COOKIE, token, {
       httpOnly: true,
       sameSite: 'lax',

@@ -28,6 +28,10 @@ All routes need a staff login (session cookie) unless marked public.
 | `POST /counters/:id/sign-out`  | Close and leave                                                 |
 | `POST /counters/:id/call-next` | Call the next ticket for the counter's services                 |
 
+Logins are limited: 5 failures for one email from one address, or 20 from one address, block
+further attempts for 15 minutes. Logins, failed logins, password changes and setting changes go
+to `audit_log`.
+
 Socket.IO on the same port: a staff browser connects with its session cookie and joins its
 branch room. Event names are in `@dozbyte/shared` (`SocketEvents`); screens refetch on each event.
 

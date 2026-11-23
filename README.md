@@ -17,6 +17,7 @@ Planning documents: requirements, design and the development plan live in the pr
 | `packages/config`     | Shared TypeScript settings                                                        |
 | `apps/server`         | Site server: NestJS API, logins, queue engine, Socket.IO live updates             |
 | `apps/web`            | Staff screens: login, front desk, staff console (Next.js)                         |
+| `apps/e2e`            | Browser tests of the main user flows (Playwright)                                 |
 | `apps/kiosk-android`  | Kiosk app (Capacitor). Sprint 0: hardware spike checklist                         |
 | `deploy/compose`      | Docker Compose for local Postgres and Redis                                       |
 | `docs/adr`            | Decision records                                                                  |
@@ -40,6 +41,9 @@ pnpm --filter @dozbyte/server start          # API on http://localhost:3001
 pnpm --filter @dozbyte/web dev                # screens on http://localhost:3000
 pnpm check                                   # format, lint, type check, tests
 ```
+
+Browser tests: `pnpm build`, create a `dozbyte_e2e` database, then `pnpm --filter @dozbyte/e2e e2e`.
+They start the server and web app themselves and reseed the database before each test.
 
 Server tests need a `dozbyte_test` database (`createdb -h localhost -U dozbyte dozbyte_test`);
 set `TEST_DATABASE_URL` to use another one.

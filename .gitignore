@@ -17,3 +17,5 @@ apps/kiosk-android/android/.gradle/
 apps/server/src/generated/
 next-env.d.ts
 *.tsbuildinfo
+test-results/
+playwright-report/
