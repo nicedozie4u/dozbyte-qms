@@ -1,0 +1,20 @@
+{
+  "name": "@dozbyte/queue-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure queue rules: who is next, journey moves, wait estimates. No database, no I/O.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@dozbyte/config": "workspace:*"
+  },
+  "dependencies": {
+    "@dozbyte/shared": "workspace:*"
+  }
+}

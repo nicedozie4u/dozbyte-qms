@@ -1,0 +1,285 @@
+// Dozbyte QMS site server database (design doc: Database schema).
+// Sprint 0 covers the business, setup and queue tables. Appointments, call_outs, feedback,
+// push_subscriptions, daily_stats, audit_log, licence and usage_monthly come in later sprints.
+//
+// Rules that apply everywhere:
+// - Every table has tenant_id naming the business, so branch data can be combined later.
+// - Times are stored in UTC (timestamptz) and shown in Lagos time (WAT).
+// - Money is stored in kobo as whole numbers.
+// - Tables and columns are snake_case in the database, camelCase in TypeScript.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Business ----------
+
+model Business {
+  id           String   @id @default(uuid()) @db.Uuid
+  name         String
+  businessType String   @map("business_type") // template key, e.g. "hospital"
+  logoPath     String?  @map("logo_path")
+  colours      Json     @default("{}")
+  /// Custom wording, e.g. { "customer": "patient" } (FR-24)
+  wording      Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  branches Branch[]
+  users    User[]
+
+  @@map("business")
+}
+
+// ---------- Business setup ----------
+
+model Branch {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @map("tenant_id") @db.Uuid
+  name                String
+  address             String?
+  /// Weekly opening hours, e.g. { "mon": [["08:00","17:00"]] } (FR-14)
+  openingHours        Json     @default("{}") @map("opening_hours")
+  /// Fairness rule: serve one normal ticket after this many priority tickets; null = off
+  normalAfterPriority Int?     @map("normal_after_priority")
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business Business  @relation(fields: [tenantId], references: [id])
+  services Service[]
+  counters Counter[]
+  users    User[]
+  devices  Device[]
+  tickets  Ticket[]
+
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model Service {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  branchId         String   @map("branch_id") @db.Uuid
+  /// Stable key from the template, e.g. "consultation"
+  key              String
+  name             String
+  /// Ticket prefix, e.g. "A" (FR-4)
+  prefix           String
+  dailyTicketLimit Int?     @map("daily_ticket_limit")
+  openingHours     Json?    @map("opening_hours")
+  kioskStart       Boolean  @default(false) @map("kiosk_start")
+  appointments     Boolean  @default(false)
+  slotsPerHour     Int?     @map("slots_per_hour")
+  /// Extra form fields (FR-24), same shape as the template's extraFields
+  extraFields      Json     @default("[]") @map("extra_fields")
+  /// Default next stage of the journey; for a side stage (Lab) this is where it returns to
+  nextServiceId    String?  @map("next_service_id") @db.Uuid
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  branch          Branch           @relation(fields: [branchId], references: [id])
+  nextService     Service?         @relation("journey", fields: [nextServiceId], references: [id])
+  previousStages  Service[]        @relation("journey")
+  counterServices CounterService[]
+  tickets         Ticket[]
+
+  @@unique([branchId, key])
+  @@unique([branchId, prefix])
+  @@index([tenantId])
+  @@map("services")
+}
+
+enum CounterStatus {
+  open
+  paused
+  closed
+}
+
+model Counter {
+  id             String        @id @default(uuid()) @db.Uuid
+  tenantId       String        @map("tenant_id") @db.Uuid
+  branchId       String        @map("branch_id") @db.Uuid
+  /// e.g. "Counter 3" or "Consulting Room 2"
+  name           String
+  status         CounterStatus @default(closed)
+  signedInUserId String?       @map("signed_in_user_id") @db.Uuid
+  /// Priority tickets called in a row, for the fairness rule
+  priorityStreak Int           @default(0) @map("priority_streak")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  branch          Branch           @relation(fields: [branchId], references: [id])
+  signedInUser    User?            @relation(fields: [signedInUserId], references: [id])
+  counterServices CounterService[]
+  devices         Device[]
+  tickets         Ticket[]
+  ticketEvents    TicketEvent[]
+
+  @@unique([branchId, name])
+  @@index([tenantId])
+  @@map("counters")
+}
+
+/// Which counters serve which services (FR-13)
+model CounterService {
+  tenantId  String @map("tenant_id") @db.Uuid
+  counterId String @map("counter_id") @db.Uuid
+  serviceId String @map("service_id") @db.Uuid
+
+  counter Counter @relation(fields: [counterId], references: [id], onDelete: Cascade)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([counterId, serviceId])
+  @@index([serviceId])
+  @@map("counter_services")
+}
+
+enum UserRole {
+  platform_support
+  business_admin
+  branch_manager
+  staff
+}
+
+model User {
+  id              String    @id @default(uuid()) @db.Uuid
+  /// Empty for Dozie's support team
+  tenantId        String?   @map("tenant_id") @db.Uuid
+  branchId        String?   @map("branch_id") @db.Uuid
+  name            String
+  email           String    @unique
+  /// Stored encrypted, +234 format (NFR-13)
+  phone           String?
+  /// Argon2id hash (NFR-6)
+  passwordHash    String?   @map("password_hash")
+  mustSetPassword Boolean   @default(true) @map("must_set_password")
+  role            UserRole
+  active          Boolean   @default(true)
+  lastLoginAt     DateTime? @map("last_login_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business      Business?     @relation(fields: [tenantId], references: [id])
+  branch        Branch?       @relation(fields: [branchId], references: [id])
+  countersInUse Counter[]
+  ticketsServed Ticket[]
+  ticketEvents  TicketEvent[]
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+enum DeviceType {
+  kiosk
+  waiting_tv
+  counter_sign
+}
+
+model Device {
+  id         String     @id @default(uuid()) @db.Uuid
+  tenantId   String     @map("tenant_id") @db.Uuid
+  branchId   String     @map("branch_id") @db.Uuid
+  type       DeviceType
+  name       String
+  /// For a counter sign: the counter or room it belongs to
+  counterId  String?    @map("counter_id") @db.Uuid
+  /// Hash of the device key issued at pairing; null until paired
+  keyHash    String?    @map("key_hash")
+  pairedAt   DateTime?  @map("paired_at") @db.Timestamptz(3)
+  lastSeenAt DateTime?  @map("last_seen_at") @db.Timestamptz(3)
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  branch  Branch   @relation(fields: [branchId], references: [id])
+  counter Counter? @relation(fields: [counterId], references: [id])
+
+  @@index([tenantId])
+  @@map("devices")
+}
+
+// ---------- Queues ----------
+
+enum TicketStatus {
+  waiting
+  called
+  serving
+  served
+  no_show
+  cancelled
+  moved_on
+}
+
+enum TicketSource {
+  kiosk
+  staff
+  appointment
+}
+
+/// One row per stage of a visit; stages of one visit share visit_id and number (FR-8)
+model Ticket {
+  id             String       @id @default(uuid()) @db.Uuid
+  tenantId       String       @map("tenant_id") @db.Uuid
+  branchId       String       @map("branch_id") @db.Uuid
+  visitId        String       @map("visit_id") @db.Uuid
+  /// The service is the stage this row is for
+  serviceId      String       @map("service_id") @db.Uuid
+  /// e.g. "R-023"; kept across all stages of the visit
+  number         String
+  /// Local (WAT) calendar day the visit started, so numbers restart daily
+  serviceDay     DateTime     @map("service_day") @db.Date
+  source         TicketSource
+  priorityLevel  Int          @default(0) @map("priority_level")
+  priorityReason String?      @map("priority_reason")
+  status         TicketStatus @default(waiting)
+  /// Issue time, slot time for an appointment, or previous stage end time
+  sortTime       DateTime     @map("sort_time") @db.Timestamptz(3)
+  /// Answers to the service's extra fields; personal data, erased after retention
+  extraFields    Json         @default("{}") @map("extra_fields")
+  /// Short visit reason only; no medical details (NFR-7)
+  visitReason    String?      @map("visit_reason")
+  counterId      String?      @map("counter_id") @db.Uuid
+  staffId        String?      @map("staff_id") @db.Uuid
+  issuedAt       DateTime     @default(now()) @map("issued_at") @db.Timestamptz(3)
+  calledAt       DateTime?    @map("called_at") @db.Timestamptz(3)
+  servingAt      DateTime?    @map("serving_at") @db.Timestamptz(3)
+  endedAt        DateTime?    @map("ended_at") @db.Timestamptz(3)
+  printed        Boolean      @default(false)
+
+  branch  Branch        @relation(fields: [branchId], references: [id])
+  service Service       @relation(fields: [serviceId], references: [id])
+  counter Counter?      @relation(fields: [counterId], references: [id])
+  staff   User?         @relation(fields: [staffId], references: [id])
+  events  TicketEvent[]
+
+  /// The live queue query: waiting tickets for a service in order
+  @@index([serviceId, status, priorityLevel(sort: Desc), sortTime])
+  @@index([visitId])
+  @@index([branchId, serviceDay, number])
+  @@index([tenantId])
+  @@map("tickets")
+}
+
+/// Every state change of a ticket; reports and the audit trail are built from these
+model TicketEvent {
+  id         String        @id @default(uuid()) @db.Uuid
+  tenantId   String        @map("tenant_id") @db.Uuid
+  ticketId   String        @map("ticket_id") @db.Uuid
+  fromStatus TicketStatus? @map("from_status")
+  toStatus   TicketStatus  @map("to_status")
+  counterId  String?       @map("counter_id") @db.Uuid
+  staffId    String?       @map("staff_id") @db.Uuid
+  at         DateTime      @default(now()) @db.Timestamptz(3)
+
+  ticket  Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  counter Counter? @relation(fields: [counterId], references: [id])
+  staff   User?    @relation(fields: [staffId], references: [id])
+
+  @@index([ticketId, at])
+  @@index([tenantId, at])
+  @@map("ticket_events")
+}

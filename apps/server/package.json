@@ -1,0 +1,18 @@
+{
+  "name": "@dozbyte/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Site server: NestJS API, WebSocket gateway and job worker. Sprint 0 holds the database schema; the NestJS app lands in sprint 1.",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "db:validate": "prisma validate",
+    "db:format": "prisma format",
+    "db:migrate": "prisma migrate dev",
+    "db:generate": "prisma generate"
+  },
+  "devDependencies": {
+    "@dozbyte/config": "workspace:*",
+    "prisma": "7.10.1"
+  }
+}

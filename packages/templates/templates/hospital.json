@@ -1,0 +1,43 @@
+{
+  "key": "hospital",
+  "name": "Hospital",
+  "wording": {
+    "customer": "patient",
+    "customers": "patients",
+    "counter": "room"
+  },
+  "services": [
+    {
+      "key": "records",
+      "name": "Records",
+      "prefix": "R",
+      "kioskStart": true,
+      "appointments": true,
+      "extraFields": [
+        {
+          "key": "hospital-card-number",
+          "label": "Hospital card number",
+          "type": "text",
+          "required": false,
+          "personal": true
+        }
+      ]
+    },
+    { "key": "triage", "name": "Triage", "prefix": "T" },
+    { "key": "consultation", "name": "Consultation", "prefix": "C", "appointments": true },
+    { "key": "lab", "name": "Lab", "prefix": "L" },
+    { "key": "pharmacy", "name": "Pharmacy", "prefix": "P" }
+  ],
+  "journey": {
+    "steps": ["records", "triage", "consultation", "pharmacy"],
+    "sideStages": {
+      "lab": { "returnTo": "consultation" }
+    }
+  },
+  "priorityReasons": [
+    { "key": "emergency", "label": "Emergency", "level": 3 },
+    { "key": "pregnant", "label": "Pregnant", "level": 1 },
+    { "key": "elderly", "label": "Elderly", "level": 1 },
+    { "key": "disabled", "label": "Disability", "level": 1 }
+  ]
+}
