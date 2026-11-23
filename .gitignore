@@ -15,3 +15,5 @@ apps/kiosk-android/android/.gradle/
 *.key
 *.keystore
 apps/server/src/generated/
+next-env.d.ts
+*.tsbuildinfo

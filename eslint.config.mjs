@@ -11,6 +11,7 @@ export default tseslint.config(
       '**/node_modules/**',
       '**/src/generated/**',
       '**/.next/**',
+      '**/next-env.d.ts',
     ],
   },
   js.configs.recommended,
