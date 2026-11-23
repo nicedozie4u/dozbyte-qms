@@ -20,7 +20,7 @@ import {
   type DoneChoice,
   type WaitingTicket,
 } from '@dozbyte/queue-core';
-import { SocketEvents, type SocketEventName } from '@dozbyte/shared';
+import { SocketEvents, type SocketEventName, type TicketView } from '@dozbyte/shared';
 import { getTemplate, type TemplateKey } from '@dozbyte/templates';
 import { randomUUID } from 'node:crypto';
 import type { SessionUser } from '../auth/auth.types.js';
@@ -43,26 +43,6 @@ const ticketInclude = {
 } as const;
 
 type TicketRow = Prisma.TicketGetPayload<{ include: typeof ticketInclude }>;
-
-export interface TicketView {
-  id: string;
-  visitId: string;
-  number: string;
-  serviceId: string;
-  serviceName: string;
-  status: TicketStatus;
-  priorityLevel: number;
-  priorityReason: string | null;
-  source: TicketSource;
-  sortTime: string;
-  counterId: string | null;
-  counterName: string | null;
-  issuedAt: string;
-  calledAt: string | null;
-  servingAt: string | null;
-  extraFields: unknown;
-  visitReason: string | null;
-}
 
 function view(t: TicketRow): TicketView {
   return {
