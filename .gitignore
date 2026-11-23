@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.turbo/
+coverage/
+.next/
+*.log
+.env
+.env.*
+!.env.example
+# Android build output
+apps/kiosk-android/android/app/build/
+apps/kiosk-android/android/.gradle/
+# Signing keys never go in the repo
+*.pem
+*.key
+*.keystore
+apps/server/src/generated/
