@@ -1,4 +1,5 @@
 import { type DynamicModule, Global, Module } from '@nestjs/common';
+import { AuditModule } from './audit/audit.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { APP_CONFIG, type AppConfig } from './config.js';
 import { HealthController } from './health.controller.js';
@@ -27,6 +28,7 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot(config),
         PrismaModule,
+        AuditModule,
         AuthModule,
         RealtimeModule,
         SetupModule,

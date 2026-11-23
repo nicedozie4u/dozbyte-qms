@@ -32,7 +32,7 @@ export interface TestContext {
 export async function startTestApp(): Promise<TestContext> {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl() }) });
   await prisma.$executeRawUnsafe(
-    'TRUNCATE ticket_events, tickets, devices, counter_services, counters, services, users, branches, business CASCADE',
+    'TRUNCATE audit_log, ticket_events, tickets, devices, counter_services, counters, services, users, branches, business CASCADE',
   );
   const seed = await seedHospital(prisma, {
     businessName: 'Test Hospital',

@@ -41,7 +41,7 @@ export interface ExtraFieldView {
 }
 
 export interface BranchSetupView {
-  branch: { id: string; name: string };
+  branch: { id: string; name: string; normalAfterPriority: number | null };
   business: { name: string; type: string };
   wording: { customer: string; customers: string; counter: string };
   priorityReasons: { key: string; label: string; level: number }[];
@@ -52,6 +52,7 @@ export interface BranchSetupView {
     prefix: string;
     kioskStart: boolean;
     nextServiceId: string | null;
+    dailyTicketLimit: number | null;
     extraFields: ExtraFieldView[];
   }[];
   counters: {

@@ -25,6 +25,7 @@ export function useLive(onChange: () => void, enabled = true): boolean {
       refresh();
     });
     socket.on('disconnect', () => setConnected(false));
+    socket.on('auth.error', () => window.location.assign('/login'));
     for (const e of events) socket.on(e, refresh);
     const timer = setInterval(refresh, 15_000);
     return () => {

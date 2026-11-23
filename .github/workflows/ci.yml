@@ -12,7 +12,7 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16-alpine
@@ -28,6 +28,7 @@ jobs:
           --health-interval 5s
           --health-retries 10
     env:
+      E2E_DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte_e2e?schema=public
       DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte?schema=public
       TEST_DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte_test?schema=public
     steps:
@@ -38,8 +39,10 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - name: Create the test database
-        run: psql -h localhost -U dozbyte -d dozbyte -c 'CREATE DATABASE dozbyte_test'
+      - name: Create the test databases
+        run: |
+          psql -h localhost -U dozbyte -d dozbyte -c 'CREATE DATABASE dozbyte_test'
+          psql -h localhost -U dozbyte -d dozbyte -c 'CREATE DATABASE dozbyte_e2e'
       - name: Format
         run: pnpm format:check
       - name: Lint
@@ -50,6 +53,17 @@ jobs:
         run: pnpm test
       - name: Build
         run: pnpm build
+      - name: Install the browser for browser tests
+        run: pnpm --filter @dozbyte/e2e exec playwright install --with-deps chromium
+      - name: Browser tests (main user flows)
+        run: pnpm --filter @dozbyte/e2e e2e
+      - name: Keep the browser test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report
+          retention-days: 7
       - name: Database schema and migrations
         working-directory: apps/server
         run: |

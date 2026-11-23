@@ -11,6 +11,7 @@ export const SocketEvents = {
   ticketMovedOn: 'queue.ticket.moved-on',
   counterStatusChanged: 'setup.counter.status-changed',
   waitEstimateUpdated: 'queue.wait.updated',
+  setupChanged: 'setup.branch.changed',
 } as const;
 
 export type SocketEventName = (typeof SocketEvents)[keyof typeof SocketEvents];

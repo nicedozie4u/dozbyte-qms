@@ -173,6 +173,7 @@ model User {
   countersInUse Counter[]
   ticketsServed Ticket[]
   ticketEvents  TicketEvent[]
+  auditLogs     AuditLog[]
 
   @@index([tenantId])
   @@map("users")
@@ -285,4 +286,28 @@ model TicketEvent {
   @@index([ticketId, at])
   @@index([tenantId, at])
   @@map("ticket_events")
+}
+
+// ---------- Records ----------
+
+/// Sensitive actions: logins, failed logins, setting changes, data exports (NFR-6)
+model AuditLog {
+  id       String   @id @default(uuid()) @db.Uuid
+  tenantId String?  @map("tenant_id") @db.Uuid
+  /// Null for a failed login with an unknown email
+  userId   String?  @map("user_id") @db.Uuid
+  /// e.g. "auth.login", "auth.login_failed", "setup.branch.updated"
+  action   String
+  /// What was acted on, e.g. "service:<id>"
+  target   String?
+  /// Before and after values for a setting change
+  details  Json     @default("{}")
+  ip       String?
+  at       DateTime @default(now()) @db.Timestamptz(3)
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([tenantId, at])
+  @@index([action, at])
+  @@map("audit_log")
 }

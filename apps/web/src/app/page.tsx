@@ -20,6 +20,12 @@ export default function Home() {
             <h2>Staff console</h2>
             <span className="muted">Call next, serve and send on</span>
           </Link>
+          {(user.role === 'branch_manager' || user.role === 'business_admin') && (
+            <Link href="/settings" className="panel btn choice">
+              <h2>Settings</h2>
+              <span className="muted">Priority fairness and daily ticket limits</span>
+            </Link>
+          )}
         </div>
       </main>
     </>

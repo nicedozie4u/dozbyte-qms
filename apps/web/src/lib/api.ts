@@ -19,6 +19,10 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
   });
   if (res.status === 204) return undefined as T;
   const data: unknown = await res.json().catch(() => ({}));
+  if (res.status === 401 && !path.startsWith('/auth/')) {
+    // Session ended: back to the login screen rather than a half-working page.
+    window.location.assign('/login');
+  }
   if (!res.ok) {
     const message =
       typeof data === 'object' && data && 'message' in data && typeof data.message === 'string'
@@ -32,4 +36,5 @@ async function call<T>(method: string, path: string, body?: unknown): Promise<T>
 export const api = {
   get: <T>(path: string) => call<T>('GET', path),
   post: <T>(path: string, body?: unknown) => call<T>('POST', path, body ?? {}),
+  patch: <T>(path: string, body: unknown) => call<T>('PATCH', path, body),
 };
