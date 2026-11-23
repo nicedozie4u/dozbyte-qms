@@ -1,0 +1,31 @@
+# Local development services. Start with `pnpm db:up` from the repo root.
+# The site server compose file (server, web, worker, Postgres, Redis) is added in sprint 6.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dozbyte
+      POSTGRES_DB: dozbyte
+      # Local dev only: no password, and the port is bound to this machine alone.
+      POSTGRES_HOST_AUTH_METHOD: trust
+      TZ: UTC
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U dozbyte']
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '127.0.0.1:6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      retries: 10
+
+volumes:
+  pgdata:

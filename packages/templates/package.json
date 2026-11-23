@@ -1,0 +1,20 @@
+{
+  "name": "@dozbyte/templates",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Business type templates (hospital first, bank next). Adding a template is configuration, not code (NFR-11).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@dozbyte/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@dozbyte/config": "workspace:*"
+  }
+}
