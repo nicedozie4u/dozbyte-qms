@@ -27,10 +27,11 @@ describe('nextStage', () => {
 });
 
 describe('onDone', () => {
-  const base = { journey: hospital, priorityLevel: 0, finishedAt: 5_000 };
+  const base = { priorityLevel: 0, finishedAt: 5_000 };
+  const at = (serviceId: string) => ({ serviceId, defaultNext: nextStage(hospital, serviceId) });
 
   it('moves the patient to the next stage, at the back by finish time (FR-8)', () => {
-    expect(onDone({ ...base, serviceId: 'triage', choice: { kind: 'next' } })).toEqual({
+    expect(onDone({ ...base, ...at('triage'), choice: { kind: 'next' } })).toEqual({
       action: 'enqueue',
       serviceId: 'consultation',
       sortTime: 5_000,
@@ -42,7 +43,7 @@ describe('onDone', () => {
     const out = onDone({
       ...base,
       priorityLevel: 2,
-      serviceId: 'records',
+      ...at('records'),
       choice: { kind: 'next' },
     });
     expect(out).toMatchObject({ action: 'enqueue', priorityLevel: 2 });
@@ -50,25 +51,25 @@ describe('onDone', () => {
 
   it('lets staff pick a different stage, such as Lab', () => {
     expect(
-      onDone({ ...base, serviceId: 'consultation', choice: { kind: 'stage', serviceId: 'lab' } }),
+      onDone({ ...base, ...at('consultation'), choice: { kind: 'stage', serviceId: 'lab' } }),
     ).toMatchObject({ action: 'enqueue', serviceId: 'lab' });
   });
 
   it('lets staff end the visit early', () => {
-    expect(onDone({ ...base, serviceId: 'triage', choice: { kind: 'end' } })).toEqual({
+    expect(onDone({ ...base, ...at('triage'), choice: { kind: 'end' } })).toEqual({
       action: 'end',
     });
   });
 
   it('ends the visit after pharmacy', () => {
-    expect(onDone({ ...base, serviceId: 'pharmacy', choice: { kind: 'next' } })).toEqual({
+    expect(onDone({ ...base, ...at('pharmacy'), choice: { kind: 'next' } })).toEqual({
       action: 'end',
     });
   });
 
   it('refuses to move a patient into the stage they are already in', () => {
     expect(() =>
-      onDone({ ...base, serviceId: 'lab', choice: { kind: 'stage', serviceId: 'lab' } }),
+      onDone({ ...base, ...at('lab'), choice: { kind: 'stage', serviceId: 'lab' } }),
     ).toThrow(/already in/);
   });
 });

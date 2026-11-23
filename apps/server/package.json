@@ -3,16 +3,48 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "Site server: NestJS API, WebSocket gateway and job worker. Sprint 0 holds the database schema; the NestJS app lands in sprint 1.",
+  "description": "Site server: NestJS API, Socket.IO gateway and job worker.",
   "scripts": {
-    "typecheck": "tsc -p tsconfig.json",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "dev": "prisma generate && tsc -p tsconfig.build.json && node --enable-source-maps --env-file-if-exists=.env dist/main.js",
+    "start": "node --enable-source-maps dist/main.js",
+    "typecheck": "prisma generate && tsc -p tsconfig.json",
+    "test": "prisma generate && vitest run",
+    "seed": "node --enable-source-maps --env-file-if-exists=.env dist/seed/seed.js",
     "db:validate": "prisma validate",
     "db:format": "prisma format",
     "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate"
   },
   "devDependencies": {
     "@dozbyte/config": "workspace:*",
-    "prisma": "7.10.1"
+    "@nestjs/testing": "^11.2.11",
+    "@swc/core": "^1.16.22",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/express": "^5.0.3",
+    "@types/supertest": "^6.0.3",
+    "prisma": "7.10.1",
+    "socket.io-client": "^4.8.4",
+    "supertest": "^7.1.4",
+    "unplugin-swc": "^2.0.0"
+  },
+  "dependencies": {
+    "@dozbyte/queue-core": "workspace:*",
+    "@dozbyte/shared": "workspace:*",
+    "@dozbyte/templates": "workspace:*",
+    "@nestjs/common": "^11.2.11",
+    "@nestjs/core": "^11.2.11",
+    "@nestjs/platform-express": "^11.2.11",
+    "@nestjs/platform-socket.io": "^11.2.11",
+    "@nestjs/websockets": "^11.2.11",
+    "@node-rs/argon2": "^2.2.2",
+    "@prisma/adapter-pg": "7.10.1",
+    "@prisma/client": "7.10.1",
+    "cookie-parser": "^1.4.7",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "socket.io": "^4.8.4",
+    "zod": "^4.6.7"
   }
 }

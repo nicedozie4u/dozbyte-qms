@@ -29,6 +29,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte?schema=public
+      TEST_DATABASE_URL: postgresql://dozbyte@localhost:5432/dozbyte_test?schema=public
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -37,13 +38,15 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Create the test database
+        run: psql -h localhost -U dozbyte -d dozbyte -c 'CREATE DATABASE dozbyte_test'
       - name: Format
         run: pnpm format:check
       - name: Lint
         run: pnpm lint
       - name: Type check
         run: pnpm typecheck
-      - name: Unit tests
+      - name: Tests (unit and integration)
         run: pnpm test
       - name: Database schema and migrations
         working-directory: apps/server

@@ -28,18 +28,21 @@ export function nextStage(journey: Journey, serviceId: string): string | null {
  * What happens to a patient when staff click Done.
  * The patient joins the back of the next stage's queue, ordered by when they finished this stage,
  * keeps their ticket number, and keeps their priority level.
+ *
+ * `defaultNext` is the stage the journey sends them to (from `nextStage`, or the service's stored
+ * next stage); null means the visit ends here unless staff pick a stage.
  */
 export function onDone(input: {
-  journey: Journey;
   serviceId: string;
+  defaultNext: string | null;
   priorityLevel: number;
   finishedAt: number;
   choice: DoneChoice;
 }): DoneOutcome {
-  const { journey, serviceId, priorityLevel, finishedAt, choice } = input;
+  const { serviceId, defaultNext, priorityLevel, finishedAt, choice } = input;
   if (choice.kind === 'end') return { action: 'end' };
 
-  const target = choice.kind === 'stage' ? choice.serviceId : nextStage(journey, serviceId);
+  const target = choice.kind === 'stage' ? choice.serviceId : defaultNext;
   if (target === null) return { action: 'end' };
   if (target === serviceId) {
     throw new Error(`cannot move a ticket to the stage it is already in (${serviceId})`);
